@@ -1,0 +1,7 @@
+Add another key that terminates the program gracefully.
+
+Test for memory leaks.
+
+Add instructions for setup on Linux and Windows.
+
+Describe in README all required dependencies.

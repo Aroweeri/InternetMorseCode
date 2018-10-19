@@ -117,7 +117,6 @@ def startRemoteAudio():
 	while(remoteNoiseRunning == 1):
 		remoteMorseStream.write(REMOTEWAVEDATA)
 
-
 ###########################################################
 # Set up PyAudio things
 # *** This section copied from online forums, modified by me.
@@ -143,7 +142,7 @@ def initAudioStuff():
 
 	#generate sine waves
 	for x in xrange(NUMBEROFFRAMES):
-	 LOCALWAVEDATA = LOCALWAVEDATA+chr(int(math.sin(x/((BITRATE/FREQUENCY)/math.pi))*127+128))    
+		LOCALWAVEDATA = LOCALWAVEDATA+chr(int(math.sin(x/((BITRATE/FREQUENCY)/math.pi))*127+128))
 
 	FREQUENCY = 2000     #Hz, waves per second, 261.63=C4-note.
 
@@ -152,22 +151,21 @@ def initAudioStuff():
 	REMOTEWAVEDATA = ''    
 	#generating waves
 	for x in xrange(NUMBEROFFRAMES):
-	 REMOTEWAVEDATA = REMOTEWAVEDATA+chr(int(math.sin(x/((BITRATE/FREQUENCY)/math.pi))*127+128))    
+		REMOTEWAVEDATA = REMOTEWAVEDATA+chr(int(math.sin(x/((BITRATE/FREQUENCY)/math.pi))*127+128))
 
 	pyAudio = PyAudio()
 
 	#start stream to use for local morse code noise
-	localMorseStream = pyAudio.open(format = pyAudio.get_format_from_width(1), 
-			channels = 1, 
-			rate = BITRATE, 
-			output = True)
+	localMorseStream = pyAudio.open(format = pyAudio.get_format_from_width(1),
+		channels = 1,
+		rate = BITRATE,
+		output = True)
 
-	#start stream to use for remote  morse code noise
-	remoteMorseStream = pyAudio.open(format = pyAudio.get_format_from_width(1), 
-			channels = 1, 
-			rate = BITRATE, 
-			output = True)
-
+	#start stream to use for remote morse code noise
+	remoteMorseStream = pyAudio.open(format = pyAudio.get_format_from_width(1),
+		channels = 1,
+		rate = BITRATE,
+		output = True)
 
 ###########################################################
 # Main method
@@ -200,7 +198,8 @@ def main():
 			sendSocket.connect((destIp, listenPort))
 			confirmConnection = 1
 		except Exception:
-			print("Failed to create sendSocket to ip " + destIp + ", retrying... CTRL+C to quit.")
+			print("Failed to create sendSocket to ip " + destIp +
+			      ", retrying... CTRL+C to quit.")
 			confirmConnection = 0
 
 	initAudioStuff()
@@ -209,14 +208,15 @@ def main():
 	keyboard.on_press_key("space", buttonPressed)
 	keyboard.on_release_key("space", buttonReleased)
 
+	#programs loops forever, waiting for a message from the remote machine to play back the
+	#noise to the local user.
 	while(True):
 		remoteMessage = sendSocket.recv(1024)
-		if(remoteMessage != ""):
-			if(remoteMessage == "up"):
-				killReceivedAudio()
-			elif (remoteMessage == "down"):
-				if(remoteNoiseRunning == 0):
-					startReceivedAudioThread()
+		if(remoteMessage == "up"):      #if remote signals that spacebar was released.
+			killReceivedAudio()
+		elif (remoteMessage == "down"): #if remote signals that spacebar was pressed down.
+			if(remoteNoiseRunning == 0):  #only start the audio if not already playing
+				startReceivedAudioThread()
 
 	localMorseStream.stop_stream()
 	localMorseStream.close()

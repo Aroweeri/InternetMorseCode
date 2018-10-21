@@ -10,6 +10,7 @@ localNoiseRunning = 0     #flag is set when morse code noise is playing due to l
 remoteNoiseRunning = 0    #flag is set when morse code noise is playing due to remote user action
 listenPort = 60001        #port to listen for signals from
 writePort = 60002         #port to write signals to
+sendSocket = None         #socket used to send signals to the remote machine
 remoteConnection = None   #connection received from socket.accept()
 remoteAddress = None      #address received from socket.accept()
 sourceIp = "127.0.0.1"    #ip address of host. set to default value
@@ -21,6 +22,14 @@ REMOTEWAVEDATA = None     #sine wave sound played when remote user is sending mo
 pyAudio = None            #pyAudio object
 lastMessage = "up"        #used to prevent sending many signals when the spacebar is held down
 confirmConnection = 0     #flag set if socket.connect() returns with connection
+shouldNotQuit = 1         #flag set to signal main loop to exit
+
+###########################################################
+# Close resources and exit program properly
+###########################################################
+def quit(suppress):
+	global shouldNotQuit
+	shouldNotQuit = 0
 
 ###########################################################
 # Start audio with a lower noise to signify message from remote
@@ -176,6 +185,10 @@ def main():
 	global remoteConnection
 	global sourceIp
 	global destIp
+	global sendSocket
+	global shouldNotQuit
+	global localMorseStream
+	global remoteMorseStream
 
 	remoteMessage = None
 
@@ -190,8 +203,12 @@ def main():
 
 	startServerThread()
 
+	#setup quit key before we start looping to connect
+	keyboard.on_press_key("q", quit)
+
 	#connect to remote machine. Retry indefinitely until user terminates program.
 	sendSocket = socket.socket()
+	sendSocket.settimeout(1)
 	while(confirmConnection == 0):
 		time.sleep(1)
 		try:
@@ -210,8 +227,11 @@ def main():
 
 	#programs loops forever, waiting for a message from the remote machine to play back the
 	#noise to the local user.
-	while(True):
-		remoteMessage = sendSocket.recv(1024)
+	while(shouldNotQuit == 1):
+		try:
+			remoteMessage = sendSocket.recv(1024)
+		except Exception:
+			remoteMessage = ""
 		if(remoteMessage == "up"):      #if remote signals that spacebar was released.
 			killReceivedAudio()
 		elif (remoteMessage == "down"): #if remote signals that spacebar was pressed down.
@@ -220,6 +240,9 @@ def main():
 
 	localMorseStream.stop_stream()
 	localMorseStream.close()
-	p.terminate()
+	remoteMorseStream.stop_stream()
+	remoteMorseStream.close()
+	sendSocket.close()
+	remoteConnection.close()
 
 main()

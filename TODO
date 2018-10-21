@@ -5,3 +5,7 @@ Test for memory leaks.
 Add instructions for setup on Linux and Windows.
 
 Describe in README all required dependencies.
+
+Need to find a way for keystrokes not to be recorded when dealing with other windows
+
+

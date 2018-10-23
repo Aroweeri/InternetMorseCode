@@ -8,12 +8,8 @@ import os
 
 localNoiseRunning = 0     #flag is set when morse code noise is playing due to local user action
 remoteNoiseRunning = 0    #flag is set when morse code noise is playing due to remote user action
-listenPort = 60001        #port to listen for signals from
-writePort = 60002         #port to write signals to
-sendSocket = None         #socket used to send signals to the remote machine
+port = 60001              #port to listen for signals from
 remoteConnection = None   #connection received from socket.accept()
-remoteAddress = None      #address received from socket.accept()
-sourceIp = "127.0.0.1"    #ip address of host. set to default value
 destIp = "127.0.0.1"      #if address of destination. set to default value
 localMorseStream = None   #audio stream to write morse code noise to signify local user action
 remoteMorseStream = None  #audio stream to write morse code noise to signify remote user action
@@ -70,27 +66,6 @@ def buttonReleased(suppress):
 		remoteConnection.send("up")
 		lastMessage = "up"
 		killLocalAudio()
-
-###########################################################
-# Start a thread running startServerThread()
-###########################################################
-def startServerThread():
-	os.sys.stdout.flush()
-	t = threading.Thread(target=startServer)
-	t.start()
-
-###########################################################
-# Start the socket that recieves connections.
-###########################################################
-def startServer():
-
-	global sourceIp
-	global remoteConnection
-
-	recvSocket = socket.socket()
-	recvSocket.bind((sourceIp,listenPort))
-	recvSocket.listen(1)
-	remoteConnection, remoteAddress = recvSocket.accept()
 
 ###########################################################
 # Start a thread to play audio
@@ -183,9 +158,7 @@ def main():
 
 	global confirmConnection
 	global remoteConnection
-	global sourceIp
 	global destIp
-	global sendSocket
 	global shouldNotQuit
 	global localMorseStream
 	global remoteMorseStream
@@ -193,29 +166,26 @@ def main():
 	remoteMessage = None
 
 	#Get ip address argument
-	if(len(os.sys.argv) != 3):
-		print "Must provide Sorce and Destination IP address as argument."
-		print "usage: python keyboard_stuff.py <source> <dest>"
+	if(len(os.sys.argv) != 2):
+		print "Must provide Souce and Destination IP address as argument."
+		print "usage: python keyboard_stuff.py <dest>"
 		exit(1)
 	else:
-		sourceIp = os.sys.argv[1]
-		destIp = os.sys.argv[2]
-
-	startServerThread()
+		destIp = os.sys.argv[1]
 
 	#setup quit key before we start looping to connect
 	keyboard.on_press_key("q", quit)
 
 	#connect to remote machine. Retry indefinitely until user terminates program.
-	sendSocket = socket.socket()
-	sendSocket.settimeout(1)
+	remoteConnection = socket.socket()
+	remoteConnection.settimeout(1)
 	while(confirmConnection == 0):
 		time.sleep(1)
 		try:
-			sendSocket.connect((destIp, listenPort))
+			remoteConnection.connect((destIp, port))
 			confirmConnection = 1
 		except Exception:
-			print("Failed to create sendSocket to ip " + destIp +
+			print("Failed to create remoteConnection to ip " + destIp +
 			      ", retrying... CTRL+C to quit.")
 			confirmConnection = 0
 
@@ -229,7 +199,7 @@ def main():
 	#noise to the local user.
 	while(shouldNotQuit == 1):
 		try:
-			remoteMessage = sendSocket.recv(1024)
+			remoteMessage = remoteConnection.recv(1024)
 		except Exception:
 			remoteMessage = ""
 		if(remoteMessage == "up"):      #if remote signals that spacebar was released.
@@ -242,7 +212,6 @@ def main():
 	localMorseStream.close()
 	remoteMorseStream.stop_stream()
 	remoteMorseStream.close()
-	sendSocket.close()
 	remoteConnection.close()
 
 main()

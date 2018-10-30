@@ -5,6 +5,7 @@ import pyaudio
 import time
 import socket
 import os
+from appJar import gui
 
 localNoiseRunning = 0     #flag is set when morse code noise is playing due to local user action
 remoteNoiseRunning = 0    #flag is set when morse code noise is playing due to remote user action
@@ -19,13 +20,26 @@ pyAudio = None            #pyAudio object
 lastMessage = "up"        #used to prevent sending many signals when the spacebar is held down
 confirmConnection = 0     #flag set if socket.connect() returns with connection
 shouldNotQuit = 1         #flag set to signal main loop to exit
+app = None                #gui of the program
+
+###########################################################
+# Add the morse clicker and exit buttons to the gui and remove label
+###########################################################
+def addButtonsToGui():
+	global app
+	app.removeLabel("label")
+	clicker = app.addButton("clicker", None)
+	clicker.bind("<Button-1>", buttonPressed, add="+")
+	clicker.bind("<ButtonRelease-1>", buttonReleased, add="+")
 
 ###########################################################
 # Close resources and exit program properly
 ###########################################################
 def quit(suppress):
 	global shouldNotQuit
+	global app
 	shouldNotQuit = 0
+	app.stop()
 
 ###########################################################
 # Start audio with a lower noise to signify message from remote
@@ -34,7 +48,7 @@ def startReceivedAudioThread():
 	global remoteNoiseRunning
 	if(remoteNoiseRunning != 0):
 		return
-	remoteNoiseRunning = 1;
+	remoteNoiseRunning = 1
 	t = threading.Thread(target=startRemoteAudio)
 	t.start()
 
@@ -74,7 +88,7 @@ def startLocalAudioThread():
 	global localNoiseRunning
 	if(localNoiseRunning != 0):
 		return
-	localNoiseRunning = 1;
+	localNoiseRunning = 1
 	t = threading.Thread(target=startLocalAudio)
 	t.start()
 
@@ -173,8 +187,6 @@ def main():
 	else:
 		destIp = os.sys.argv[1]
 
-	#setup quit key before we start looping to connect
-	keyboard.on_press_key("q", quit)
 
 	#connect to remote machine. Retry indefinitely until user terminates program.
 	remoteConnection = socket.socket()
@@ -185,15 +197,10 @@ def main():
 			remoteConnection.connect((destIp, port))
 			confirmConnection = 1
 		except Exception:
-			print("Failed to create remoteConnection to ip " + destIp +
-			      ", retrying... CTRL+C to quit.")
 			confirmConnection = 0
 
+	addButtonsToGui()
 	initAudioStuff()
-
-	#setup keybindings with keyboard module
-	keyboard.on_press_key("space", buttonPressed)
-	keyboard.on_release_key("space", buttonReleased)
 
 	#programs loops forever, waiting for a message from the remote machine to play back the
 	#noise to the local user.
@@ -214,4 +221,8 @@ def main():
 	remoteMorseStream.close()
 	remoteConnection.close()
 
-main()
+app = gui(handleArgs=False)
+app.addLabel("label", "Waiting to connect to server... click exit button to quit")
+exit =    app.addButton("exit", quit)
+app.thread(main)
+app.go()

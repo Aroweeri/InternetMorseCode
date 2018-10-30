@@ -1,3 +1,5 @@
 Test for memory leaks.
 
-Need to find a way for keystrokes not to be recorded when dealing with other windows
+Resolve problem with very rapid clicks crashing the program
+
+Confirm that program exits properly when given incorrect command line arguments

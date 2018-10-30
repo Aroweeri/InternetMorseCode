@@ -1,14 +1,14 @@
 # InternetMorseCode
 
 Allow two computers to send morse code back and forth with minimal network usage.
-Once both machines are connected, the user can use their spacebar as a morse code input button.
+Once both machines are connected, the user can use the gui's buttons as a morse code input method.
 
 Local feedback is provided to indicate what the timing of the signal sounds like to the remote machine.
 
 ## Setup / Dependencies
-Python modules `pyaudio` and `keyboard` need to be installed in order for this program to work.
+Python modules `pyaudio` and `keyboard` and `appjar` need to be installed. 
 You can use python's package manager, pip, to install these, such as
-`pip install pyaudio` and `pip install keyboard`.
+`pip install pyaudio` and `pip install keyboard` and `pip install appjar`.
 
 Two python scripts are used to make the connection: server.py and client.py
 
@@ -34,5 +34,4 @@ When finished, press the "q" key from either side to quit the connection gracefu
 
 ## Known Issues
 
-The spacebar is used to send signals to the connected machine, but it tracks the spacebar no matter
-which application is in focus on your Desktop.
+Clicking the "clicker" button very fast will sometimes crash the program.

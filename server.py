@@ -5,6 +5,7 @@ import pyaudio
 import time
 import socket
 import os
+from appJar import gui
 
 localNoiseRunning = 0     #flag is set when morse code noise is playing due to local user action
 remoteNoiseRunning = 0    #flag is set when morse code noise is playing due to remote user action
@@ -20,13 +21,26 @@ pyAudio = None            #pyAudio object
 lastMessage = "up"        #used to prevent sending many signals when the spacebar is held down
 shouldNotQuit = 1         #flag set to signal main loop to exit
 recvSocket = None         #socket to accept connections. Called like recvSocket.accept()
+app = None                #gui of the program
+
+###########################################################
+# Add the morse clicker and exit buttons to the gui and remove label
+###########################################################
+def addButtonsToGui():
+	global app
+	app.removeLabel("label")
+	clicker = app.addButton("clicker", None)
+	clicker.bind("<Button-1>", buttonPressed, add="+")
+	clicker.bind("<ButtonRelease-1>", buttonReleased, add="+")
 
 ###########################################################
 # Close resources and exit program properly
 ###########################################################
 def quit(suppress):
 	global shouldNotQuit
+	global app
 	shouldNotQuit = 0
+	app.stop()
 
 ###########################################################
 # Start audio with a lower noise to signify message from remote
@@ -35,7 +49,7 @@ def startReceivedAudioThread():
 	global remoteNoiseRunning
 	if(remoteNoiseRunning != 0):
 		return
-	remoteNoiseRunning = 1;
+	remoteNoiseRunning = 1
 	t = threading.Thread(target=startRemoteAudio)
 	t.start()
 
@@ -72,7 +86,6 @@ def buttonReleased(suppress):
 # Start a thread running startServerThread()
 ###########################################################
 def startServerThread():
-	os.sys.stdout.flush()
 	t = threading.Thread(target=startServer)
 	t.start()
 
@@ -89,6 +102,7 @@ def startServer():
 	recvSocket.bind((sourceIp,port))
 	recvSocket.listen(1)
 	remoteConnection, remoteAddress = recvSocket.accept()
+	addButtonsToGui()
 
 ###########################################################
 # Start a thread to play audio
@@ -97,7 +111,7 @@ def startLocalAudioThread():
 	global localNoiseRunning
 	if(localNoiseRunning != 0):
 		return
-	localNoiseRunning = 1;
+	localNoiseRunning = 1
 	t = threading.Thread(target=startLocalAudio)
 	t.start()
 
@@ -191,27 +205,21 @@ def main():
 	#Get ip address argument
 	if(len(os.sys.argv) != 2):
 		print "Must provide Souce and Destination IP address as argument."
-		print "usage: python keyboard_stuff.py <source>"
-		exit(1)
+		print "usage: python server.py <source>"
+		os.sys.exit(1)
 	else:
 		sourceIp = os.sys.argv[1]
 
-	#setup quit key before we start looping to connect
-	keyboard.on_press_key("q", quit)
 
 	startServerThread()
-	print("Waiting for client to connect. Press \"q\" to quit.")
 	while(remoteConnection == None):
 		time.sleep(1)
 		if(shouldNotQuit == 0):
-			break;
+			break
 
 	if(shouldNotQuit == 1):
 		initAudioStuff()
 
-		#setup keybindings with keyboard module
-		keyboard.on_press_key("space", buttonPressed)
-		keyboard.on_release_key("space", buttonReleased)
 
 	#programs loops forever, waiting for a message from the remote machine to play back the
 	#noise to the local user.
@@ -240,4 +248,9 @@ def main():
 		tempSock.connect(("127.0.0.1", port))
 		tempSock.close()
 
-main()
+app = gui(handleArgs=False)
+app.addLabel("label", "Waiting to connect to client... click exit button to quit")
+exit =    app.addButton("exit", quit)
+app.thread(main)
+app.go()
+

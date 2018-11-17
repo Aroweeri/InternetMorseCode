@@ -5,6 +5,7 @@ import pyaudio
 import time
 import socket
 import os
+from datetime import datetime
 from appJar import gui
 
 localNoiseRunning = 0     #flag is set when morse code noise is playing due to local user action
@@ -21,6 +22,8 @@ lastMessage = "u"         #used to prevent sending many signals when the spaceba
 confirmConnection = 0     #flag set if socket.connect() returns with connection
 shouldNotQuit = 1         #flag set to signal main loop to exit
 app = None                #gui of the program
+
+startTime = datetime.now()
 
 ###########################################################
 # Add the morse clicker and exit buttons to the gui and remove label
@@ -65,8 +68,9 @@ def killReceivedAudio():
 def buttonPressed(suppress):
 	global remoteConnection
 	global lastMessage
+	dt = datetime.now()
 	if(lastMessage == "u"):
-		remoteConnection.send("d")
+		remoteConnection.send("d," + str(dt - startTime))
 		lastMessage = "d"
 		startLocalAudioThread()
 
@@ -76,8 +80,9 @@ def buttonPressed(suppress):
 def buttonReleased(suppress):
 	global remoteConnection
 	global lastMessage
+	dt = datetime.now()
 	if(lastMessage == "d"):
-		remoteConnection.send("u")
+		remoteConnection.send("u," + str(dt - startTime))
 		lastMessage = "u"
 		killLocalAudio()
 
@@ -207,6 +212,7 @@ def main():
 	while(shouldNotQuit == 1):
 		try:
 			remoteMessage = remoteConnection.recv(1024)
+			print(remoteMessage)
 		except Exception:
 			remoteMessage = ""
 		if(remoteMessage == "u"):      #if remote signals that spacebar was released.

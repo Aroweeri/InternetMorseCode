@@ -3,6 +3,7 @@ import keyboard
 import math
 import pyaudio
 import time
+from datetime import datetime
 import socket
 import os
 from appJar import gui
@@ -22,6 +23,9 @@ lastMessage = "u"         #used to prevent sending many signals when the spaceba
 shouldNotQuit = 1         #flag set to signal main loop to exit
 recvSocket = None         #socket to accept connections. Called like recvSocket.accept()
 app = None                #gui of the program
+events = None             #list of events to play that came from remote
+
+startTime = datetime.now()
 
 ###########################################################
 # Add the morse clicker and exit buttons to the gui and remove label
@@ -66,8 +70,9 @@ def killReceivedAudio():
 def buttonPressed(suppress):
 	global remoteConnection
 	global lastMessage
+	dt = datetime.now()
 	if(lastMessage == "u"):
-		remoteConnection.send("d")
+		remoteConnection.send("d," + str(dt - startTime))
 		lastMessage = "d"
 		startLocalAudioThread()
 
@@ -77,8 +82,9 @@ def buttonPressed(suppress):
 def buttonReleased(suppress):
 	global remoteConnection
 	global lastMessage
+	dt = datetime.now()
 	if(lastMessage == "d"):
-		remoteConnection.send("u")
+		remoteConnection.send("u," + str(dt - startTime))
 		lastMessage = "u"
 		killLocalAudio()
 
@@ -99,6 +105,7 @@ def startServer():
 	global recvSocket
 
 	recvSocket = socket.socket()
+	recvSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	recvSocket.bind((sourceIp,port))
 	recvSocket.listen(1)
 	remoteConnection, remoteAddress = recvSocket.accept()
@@ -226,6 +233,7 @@ def main():
 	while(shouldNotQuit == 1):
 		try:
 			remoteMessage = remoteConnection.recv(1024)
+			print(remoteMessage)
 		except Exception:
 			remoteMessage = ""
 		if(remoteMessage == "u"):      #if remote signals that spacebar was released.

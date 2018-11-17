@@ -1,12 +1,12 @@
 import threading
 import keyboard
-import math
-import pyaudio
 import time
-from datetime import datetime
 import socket
 import os
+from datetime import datetime
 from appJar import gui
+
+import pyaudiomanager
 
 localNoiseRunning = 0     #flag is set when morse code noise is playing due to local user action
 remoteNoiseRunning = 0    #flag is set when morse code noise is playing due to remote user action
@@ -14,16 +14,11 @@ port = 60001              #port to listen for signals from
 remoteConnection = None   #connection received from socket.accept()
 remoteAddress = None      #address received from socket.accept()
 sourceIp = "127.0.0.1"    #ip address of host. set to default value
-localMorseStream = None   #audio stream to write morse code noise to signify local user action
-remoteMorseStream = None  #audio stream to write morse code noise to signify remote user action
-LOCALWAVEDATA = None      #sine wave sound played when local user is sending morse code
-REMOTEWAVEDATA = None     #sine wave sound played when remote user is sending morse code
-pyAudio = None            #pyAudio object
 lastMessage = "u"         #used to prevent sending many signals when the spacebar is held down
 shouldNotQuit = 1         #flag set to signal main loop to exit
 recvSocket = None         #socket to accept connections. Called like recvSocket.accept()
 app = None                #gui of the program
-events = None             #list of events to play that came from remote
+pyAudioManager = None     #PyAudioManager instance
 
 startTime = datetime.now()
 
@@ -133,79 +128,28 @@ def killLocalAudio():
 # Play a beep while the killLocalAudio() function has not been called
 ###########################################################
 def startLocalAudio():
-	global localMorseStream
+	global pyAudioManager
 	while(localNoiseRunning == 1):
-		localMorseStream.write(LOCALWAVEDATA)
+		pyAudioManager.getLocalMorseStream().write(pyAudioManager.getLocalSound())
 
 ###########################################################
 # Play a beep while the killLocalAudio() function has not been called
 ###########################################################
 def startRemoteAudio():
-	global remoteMorseStream
+	global pyAudioManager
 	while(remoteNoiseRunning == 1):
-		remoteMorseStream.write(REMOTEWAVEDATA)
-
-###########################################################
-# Set up PyAudio things
-# *** This section copied from online forums, modified by me.
-###########################################################
-def initAudioStuff():
-	global pyAudio
-	global localMorseStream
-	global remoteMorseStream
-	global LOCALWAVEDATA
-	global REMOTEWAVEDATA
-
-	#initialize pyaudio
-	PyAudio = pyaudio.PyAudio
-
-	#See https://en.wikipedia.org/wiki/Bit_rate#Audio
-	BITRATE = 60000   #number of frames per second/frameset.      
-	FREQUENCY = 1000  #Hz, waves per second, 261.63=C4-note.
-	LENGTH = 0.05     #seconds to play sound
-
-	NUMBEROFFRAMES = int(BITRATE * LENGTH)
-	RESTFRAMES = NUMBEROFFRAMES % BITRATE
-	LOCALWAVEDATA = ''    
-
-	#generate sine waves
-	for x in xrange(NUMBEROFFRAMES):
-		LOCALWAVEDATA = LOCALWAVEDATA+chr(int(math.sin(x/((BITRATE/FREQUENCY)/math.pi))*127+128))
-
-	FREQUENCY = 2000     #Hz, waves per second, 261.63=C4-note.
-
-	NUMBEROFFRAMES = int(BITRATE * LENGTH)
-	RESTFRAMES = NUMBEROFFRAMES % BITRATE
-	REMOTEWAVEDATA = ''    
-	#generating waves
-	for x in xrange(NUMBEROFFRAMES):
-		REMOTEWAVEDATA = REMOTEWAVEDATA+chr(int(math.sin(x/((BITRATE/FREQUENCY)/math.pi))*127+128))
-
-	pyAudio = PyAudio()
-
-	#start stream to use for local morse code noise
-	localMorseStream = pyAudio.open(format = pyAudio.get_format_from_width(1),
-		channels = 1,
-		rate = BITRATE,
-		output = True)
-
-	#start stream to use for remote morse code noise
-	remoteMorseStream = pyAudio.open(format = pyAudio.get_format_from_width(1),
-		channels = 1,
-		rate = BITRATE,
-		output = True)
+		pyAudioManager.getRemoteMorseStream().write(pyAudioManager.getRemoteSound())
 
 ###########################################################
 # Main method
 ###########################################################
 def main():
 
-	global remoteConnection
 	global sourceIp
-	global shouldNotQuit
-	global localMorseStream
-	global remoteMorseStream
 	global recvSocket
+	global remoteConnection
+	global shouldNotQuit
+	global pyAudioManager
 
 	remoteMessage = None
 
@@ -225,7 +169,8 @@ def main():
 			break
 
 	if(shouldNotQuit == 1):
-		initAudioStuff()
+		pyAudioManager = pyaudiomanager.PyAudioManager()
+		pyAudioManager.initAudioStuff()
 
 
 	#programs loops forever, waiting for a message from the remote machine to play back the
@@ -242,12 +187,8 @@ def main():
 			if(remoteNoiseRunning == 0):  #only start the audio if not already playing
 				startReceivedAudioThread()
 
-	if(localMorseStream != None):
-		localMorseStream.stop_stream()
-		localMorseStream.close()
-	if(remoteMorseStream != None):
-		remoteMorseStream.stop_stream()
-		remoteMorseStream.close()
+	if(pyAudioManager != None):
+		pyAudioManager.close()
 	if(remoteConnection != None):
 		remoteConnection.close()
 	#if connection hadn't been made yet, make a bogus one to kill socket.accept()

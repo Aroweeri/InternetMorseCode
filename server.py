@@ -9,7 +9,7 @@ from appJar import gui
 
 localNoiseRunning = 0     #flag is set when morse code noise is playing due to local user action
 remoteNoiseRunning = 0    #flag is set when morse code noise is playing due to remote user action
-port = 60001        #port to listen for signals from
+port = 60001              #port to listen for signals from
 remoteConnection = None   #connection received from socket.accept()
 remoteAddress = None      #address received from socket.accept()
 sourceIp = "127.0.0.1"    #ip address of host. set to default value
@@ -18,7 +18,7 @@ remoteMorseStream = None  #audio stream to write morse code noise to signify rem
 LOCALWAVEDATA = None      #sine wave sound played when local user is sending morse code
 REMOTEWAVEDATA = None     #sine wave sound played when remote user is sending morse code
 pyAudio = None            #pyAudio object
-lastMessage = "up"        #used to prevent sending many signals when the spacebar is held down
+lastMessage = "u"         #used to prevent sending many signals when the spacebar is held down
 shouldNotQuit = 1         #flag set to signal main loop to exit
 recvSocket = None         #socket to accept connections. Called like recvSocket.accept()
 app = None                #gui of the program
@@ -66,9 +66,9 @@ def killReceivedAudio():
 def buttonPressed(suppress):
 	global remoteConnection
 	global lastMessage
-	if(lastMessage == "up"):
-		remoteConnection.send("down")
-		lastMessage = "down"
+	if(lastMessage == "u"):
+		remoteConnection.send("d")
+		lastMessage = "d"
 		startLocalAudioThread()
 
 ###########################################################
@@ -77,9 +77,9 @@ def buttonPressed(suppress):
 def buttonReleased(suppress):
 	global remoteConnection
 	global lastMessage
-	if(lastMessage == "down"):
-		remoteConnection.send("up")
-		lastMessage = "up"
+	if(lastMessage == "d"):
+		remoteConnection.send("u")
+		lastMessage = "u"
 		killLocalAudio()
 
 ###########################################################
@@ -228,9 +228,9 @@ def main():
 			remoteMessage = remoteConnection.recv(1024)
 		except Exception:
 			remoteMessage = ""
-		if(remoteMessage == "up"):      #if remote signals that spacebar was released.
+		if(remoteMessage == "u"):      #if remote signals that spacebar was released.
 			killReceivedAudio()
-		elif (remoteMessage == "down"): #if remote signals that spacebar was pressed down.
+		elif (remoteMessage == "d"): #if remote signals that spacebar was pressed down.
 			if(remoteNoiseRunning == 0):  #only start the audio if not already playing
 				startReceivedAudioThread()
 

@@ -7,6 +7,7 @@ from datetime import datetime
 from appJar import gui
 
 import pyaudiomanager
+import morsepacket
 
 localNoiseRunning = 0     #flag is set when morse code noise is playing due to local user action
 remoteNoiseRunning = 0    #flag is set when morse code noise is playing due to remote user action
@@ -152,6 +153,7 @@ def main():
 	global pyAudioManager
 
 	remoteMessage = None
+	morsePacket = None
 
 	#Get ip address argument
 	if(len(os.sys.argv) != 2):
@@ -178,7 +180,7 @@ def main():
 	while(shouldNotQuit == 1):
 		try:
 			remoteMessage = remoteConnection.recv(1024)
-			print(remoteMessage)
+			morsePacket = morsepacket.MorsePacket(remoteMessage)
 		except Exception:
 			remoteMessage = ""
 		if(remoteMessage == "u"):      #if remote signals that spacebar was released.

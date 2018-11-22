@@ -4,6 +4,7 @@ import time
 import socket
 import os
 from datetime import datetime
+from datetime import timedelta
 from appJar import gui
 
 import pyaudiomanager
@@ -20,8 +21,63 @@ shouldNotQuit = 1         #flag set to signal main loop to exit
 recvSocket = None         #socket to accept connections. Called like recvSocket.accept()
 app = None                #gui of the program
 pyAudioManager = None     #PyAudioManager instance
+events = None             #event list to replay at the right time
+firstMessageTime = None   #timedelta when first message from remote was received
+delay = 3                 #number of seconds to delay the playback of received morse messages
 
 startTime = datetime.now()
+
+###########################################################
+# Modify timedelta in packet, add to list and sort list
+###########################################################
+def addNewEvent(morsePacket):
+	global events
+	global firstMessageTime
+	currentIndex = 0
+	insertedOutOfPlace = 0
+	modified = morsePacket
+	modified.setEventTime(modified.getEventTime() + timedelta(seconds=delay))
+	modified.setEventTime(modified.getEventTime() + firstMessageTime)
+	if(events == None or len(events) == 0):
+		events = [modified]
+	else:
+		for event in events:
+			if(event.getEventTime() >= modified.getEventTime()):
+				insertedOutOfPlace = 1
+				events.insert(currentIndex,modified)
+				break
+			currentIndex += 1
+		if(insertedOutOfPlace == 0):
+			events.append(modified)
+
+###########################################################
+# Start a thread running the function eventPlaybackThread()
+###########################################################
+def startEventPlaybackThread():
+	t = threading.Thread(target=eventPlaybackThread)
+	t.start()
+
+###########################################################
+# Loop and wait for the correct system time to play back the next event in events list
+###########################################################
+def eventPlaybackThread():
+	global shouldNotQuit
+	global remoteNoiseRunning
+	global events
+	nextEventTime = None
+
+	while(shouldNotQuit == 1):
+		dt = datetime.now()
+		if(events != None and len(events) > 0):
+			nextEventTime = events[0].getEventTime()
+			if(nextEventTime <= (dt-startTime)):
+				if(events[0].getEventType() == "u"):    #if remote signals that spacebar was released.
+					killReceivedAudio()
+				elif (events[0].getEventType() == "d"): #if remote signals that spacebar was pressed down.
+					if(remoteNoiseRunning == 0):          #only start the audio if not already playing
+						startReceivedAudioThread()
+				events.pop(0)
+		time.sleep(0.005)
 
 ###########################################################
 # Add the morse clicker and exit buttons to the gui and remove label
@@ -151,6 +207,7 @@ def main():
 	global remoteConnection
 	global shouldNotQuit
 	global pyAudioManager
+	global firstMessageTime
 
 	remoteMessage = None
 	morsePacket = None
@@ -163,31 +220,29 @@ def main():
 	else:
 		sourceIp = os.sys.argv[1]
 
-
 	startServerThread()
 	while(remoteConnection == None):
 		time.sleep(1)
 		if(shouldNotQuit == 0):
 			break
 
+	startEventPlaybackThread()
+
 	if(shouldNotQuit == 1):
 		pyAudioManager = pyaudiomanager.PyAudioManager()
 		pyAudioManager.initAudioStuff()
-
 
 	#programs loops forever, waiting for a message from the remote machine to play back the
 	#noise to the local user.
 	while(shouldNotQuit == 1):
 		try:
 			remoteMessage = remoteConnection.recv(1024)
+			if(firstMessageTime == None):
+				firstMessageTime = datetime.now() - startTime
 			morsePacket = morsepacket.MorsePacket(remoteMessage)
+			addNewEvent(morsePacket)
 		except Exception:
 			remoteMessage = ""
-		if(remoteMessage == "u"):      #if remote signals that spacebar was released.
-			killReceivedAudio()
-		elif (remoteMessage == "d"): #if remote signals that spacebar was pressed down.
-			if(remoteNoiseRunning == 0):  #only start the audio if not already playing
-				startReceivedAudioThread()
 
 	if(pyAudioManager != None):
 		pyAudioManager.close()

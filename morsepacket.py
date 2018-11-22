@@ -19,3 +19,6 @@ class MorsePacket:
 
 	def getEventTime(self):
 		return self.eventTime
+
+	def setEventTime(self, eventTime):
+		self.eventTime = eventTime

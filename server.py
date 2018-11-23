@@ -23,7 +23,8 @@ app = None                #gui of the program
 pyAudioManager = None     #PyAudioManager instance
 events = None             #event list to replay at the right time
 firstMessageTime = None   #timedelta when first message from remote was received
-delay = 3                 #number of seconds to delay the playback of received morse messages
+delay = 10                 #number of seconds to delay the playback of received morse messages
+firstSendTime = None      #local datetime when the first message was sent to the remote
 
 startTime = datetime.now()
 
@@ -122,9 +123,13 @@ def killReceivedAudio():
 def buttonPressed(suppress):
 	global remoteConnection
 	global lastMessage
+	global firstSendTime
+
+	if(firstSendTime == None):
+		firstSendTime = datetime.now()
 	dt = datetime.now()
 	if(lastMessage == "u"):
-		remoteConnection.send("d," + str(dt - startTime))
+		remoteConnection.send("d," + str(dt - firstSendTime))
 		lastMessage = "d"
 		startLocalAudioThread()
 
@@ -134,9 +139,10 @@ def buttonPressed(suppress):
 def buttonReleased(suppress):
 	global remoteConnection
 	global lastMessage
+	global firstSendTime
 	dt = datetime.now()
 	if(lastMessage == "d"):
-		remoteConnection.send("u," + str(dt - startTime))
+		remoteConnection.send("u," + str(dt - firstSendTime))
 		lastMessage = "u"
 		killLocalAudio()
 

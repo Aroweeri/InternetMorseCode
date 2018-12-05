@@ -2,6 +2,6 @@ Test for memory leaks.
 
 Resolve problem with very rapid clicks crashing the program
 
-Confirm that program exits properly when given incorrect command line arguments
-
 Need to find a way to be able to make faster clicks on windows
+
+Need to find a way to remove label on client version when running on windows - crash results if the gui is updated

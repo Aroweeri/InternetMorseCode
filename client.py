@@ -194,13 +194,7 @@ def main():
 	morsePacket = None
 
 	#Get ip address argument
-	if(len(os.sys.argv) != 2):
-		print "Must provide Souce and Destination IP address as argument."
-		print "usage: python client.py <dest>"
-		os.sys.exit(1)
-	else:
-		destIp = os.sys.argv[1]
-
+	destIp = os.sys.argv[1]
 
 	#connect to remote machine. Retry indefinitely until user terminates program.
 	remoteConnection = socket.socket()
@@ -233,6 +227,11 @@ def main():
 
 	pyAudioManager.close()
 	remoteConnection.close()
+
+if(len(os.sys.argv) != 2):
+	print "Must provide Souce and Destination IP address as argument."
+	print "usage: python client.py <dest>"
+	os.sys.exit(1)
 
 app = gui(handleArgs=False)
 app.addLabel("label", "Waiting to connect to server... click exit button to quit")

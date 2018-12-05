@@ -23,7 +23,7 @@ app = None                #gui of the program
 pyAudioManager = None     #PyAudioManager instance
 events = None             #event list to replay at the right time
 firstMessageTime = None   #timedelta when first message from remote was received
-delay = 10                 #number of seconds to delay the playback of received morse messages
+delay = 3                 #number of seconds to delay the playback of received morse messages
 firstSendTime = None      #local datetime when the first message was sent to the remote
 
 startTime = datetime.now()
@@ -219,12 +219,7 @@ def main():
 	morsePacket = None
 
 	#Get ip address argument
-	if(len(os.sys.argv) != 2):
-		print "Must provide Souce and Destination IP address as argument."
-		print "usage: python server.py <source>"
-		os.sys.exit(1)
-	else:
-		sourceIp = os.sys.argv[1]
+	sourceIp = os.sys.argv[1]
 
 	startServerThread()
 	while(remoteConnection == None):
@@ -259,6 +254,11 @@ def main():
 		tempSock = socket.socket()
 		tempSock.connect(("127.0.0.1", port))
 		tempSock.close()
+
+if(len(os.sys.argv) != 2):
+	print "Must provide Souce and Destination IP address as argument."
+	print "usage: python server.py <source>"
+	os.sys.exit(1)
 
 app = gui(handleArgs=False)
 app.addLabel("label", "Waiting to connect to client... click exit button to quit")

@@ -5,3 +5,11 @@ Resolve problem with very rapid clicks crashing the program
 Need to find a way to be able to make faster clicks on windows
 
 Need to find a way to remove label on client version when running on windows - crash results if the gui is updated
+
+possibly have a central server for InternetMorseCode, clients connect and server routes messages to correct user.
+
+add option to convert a sentence into a message for if the user doesn't want to manually send morse
+
+needs mvc setup
+
+have custimization for how your tone will sound to others

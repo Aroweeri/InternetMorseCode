@@ -6,8 +6,8 @@ class MorsePacket:
 	eventTime = None
 
 	def __init__(self, unparsedMessage):
-		self.eventType = unparsedMessage.split(',')[0]
-		self.eventTime = unparsedMessage.split(',')[1]
+		self.eventType = unparsedMessage.decode().split(',')[0]
+		self.eventTime = unparsedMessage.decode().split(',')[1]
 		hours = self.eventTime.split(':')[0]
 		minutes = self.eventTime.split(':')[1]
 		seconds = self.eventTime.split(':')[2].split('.')[0]

@@ -44,7 +44,7 @@ class PyAudioManager:
 		self.localSound = ''    
 
 		#generate sine waves
-		for x in xrange(NUMBEROFFRAMES):
+		for x in range(NUMBEROFFRAMES):
 			self.localSound = self.localSound+chr(int(math.sin(x/((BITRATE/FREQUENCY)/math.pi))*127+128))
 
 		FREQUENCY = 2000     #Hz, waves per second, 261.63=C4-note.
@@ -53,7 +53,7 @@ class PyAudioManager:
 		RESTFRAMES = NUMBEROFFRAMES % BITRATE
 		self.remoteSound = ''    
 		#generating waves
-		for x in xrange(NUMBEROFFRAMES):
+		for x in range(NUMBEROFFRAMES):
 			self.remoteSound = self.remoteSound+chr(int(math.sin(x/((BITRATE/FREQUENCY)/math.pi))*127+128))
 
 		self.pyAudio = PyAudio()

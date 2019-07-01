@@ -6,6 +6,7 @@ Once both machines are connected, the user can use the gui's buttons as a morse 
 Local feedback is provided to indicate what the timing of the signal sounds like to the remote machine.
 
 ## Setup / Dependencies
+Python3 Application
 Python modules `pyaudio` and `keyboard` and `appjar` need to be installed. 
 You can use python's package manager, pip, to install these, such as
 `pip install pyaudio` and `pip install keyboard` and `pip install appjar`.

@@ -129,7 +129,7 @@ def buttonPressed(suppress):
 		firstSendTime = datetime.now()
 	dt = datetime.now()
 	if(lastMessage == "u"):
-		remoteConnection.send("d," + str(dt - firstSendTime))
+		remoteConnection.send(("d," + str(dt - firstSendTime)).encode())
 		lastMessage = "d"
 		startLocalAudioThread()
 
@@ -142,7 +142,7 @@ def buttonReleased(suppress):
 	global firstSendTime
 	dt = datetime.now()
 	if(lastMessage == "d"):
-		remoteConnection.send("u," + str(dt - firstSendTime))
+		remoteConnection.send(("u," + str(dt - firstSendTime)).encode())
 		lastMessage = "u"
 		killLocalAudio()
 
@@ -256,8 +256,8 @@ def main():
 		tempSock.close()
 
 if(len(os.sys.argv) != 2):
-	print "Must provide Souce and Destination IP address as argument."
-	print "usage: python server.py <source>"
+	print("Must provide Souce and Destination IP address as argument.")
+	print("usage: python server.py <source>")
 	os.sys.exit(1)
 
 app = gui(handleArgs=False)

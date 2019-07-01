@@ -123,12 +123,14 @@ def buttonPressed(suppress):
 	global remoteConnection
 	global lastMessage
 	global firstSendTime
+	message = None
 
 	if(firstSendTime == None):
 		firstSendTime = datetime.now()
 	dt = datetime.now()
 	if(lastMessage == "u"):
-		remoteConnection.send("d," + str(dt - firstSendTime))
+		message = ("d," + str(dt - firstSendTime)).encode()
+		remoteConnection.send(message)
 		lastMessage = "d"
 		startLocalAudioThread()
 
@@ -138,9 +140,12 @@ def buttonPressed(suppress):
 def buttonReleased(suppress):
 	global remoteConnection
 	global lastMessage
+	message = None
+
 	dt = datetime.now()
 	if(lastMessage == "d"):
-		remoteConnection.send("u," + str(dt - firstSendTime))
+		message = ("u," + str(dt - firstSendTime)).encode()
+		remoteConnection.send(message)
 		lastMessage = "u"
 		killLocalAudio()
 
@@ -229,8 +234,8 @@ def main():
 	remoteConnection.close()
 
 if(len(os.sys.argv) != 2):
-	print "Must provide Souce and Destination IP address as argument."
-	print "usage: python client.py <dest>"
+	print("Must provide Souce and Destination IP address as argument.")
+	print("usage: python client.py <dest>")
 	os.sys.exit(1)
 
 app = gui(handleArgs=False)

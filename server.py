@@ -7,15 +7,8 @@ from datetime import timedelta
 
 import morsepacket
 
-port = 60001              #port to listen for signals from
-remoteConnection = None   #connection received from socket.accept()
-remoteAddress = None      #address received from socket.accept()
-sourceIp = "127.0.0.1"    #ip address of host. set to default value
-recvSocket = None         #socket to accept connections. Called like recvSocket.accept()
 events = None             #event list to replay at the right time
-firstMessageTime = None   #timedelta when first message from remote was received
 delay = 3                 #number of seconds to delay the playback of received morse messages
-firstSendTime = None      #local datetime when the first message was sent to the remote
 
 startTime = datetime.now()
 
@@ -23,27 +16,30 @@ class Client:
 	def __init__(self, remoteConnection, remoteAddress):
 		self.remoteConnection = remoteConnection
 		self.remoteAddress = remoteAddress
+	def close(self):
+		self.remoteConnection.close()
 
 class Server:
 	def __init__(self):
 		self.shouldQuit = False
-		self.sourceIp = None
+		self.sourceIp = "127.0.0.1"
+		self.port = 60001
 		self.recvSocket = None
-		self.remoteConnection = None
 		self.firstMessageTime = None
 		self.clients = None
 		self.listenerThread = None
 
 	def clientThread(self, client):
-		print("Started client thread.")
-		try:
-			remoteMessage = remoteConnection.recv(1024)
-			if(firstMessageTime == None):
-				firstMessageTime = datetime.now() - startTime
-			morsePacket = morsepacket.MorsePacket(remoteMessage)
-			addNewEvent(morsePacket)
-		except Exception:
-			remoteMessage = ""
+		client.remoteConnection.settimeout(1);
+		while(self.shouldQuit == False):
+			try:
+				remoteMessage =  client.remoteConnection.recv(1024)
+				for c in self.clients:
+					#if(c.remoteAddress == client.remoteAddress):
+					#	continue
+					c.remoteConnection.send(remoteMessage)
+			except Exception:
+				remoteMessage = ""
 
 	###########################################################
 	# Loop and wait for new clients to connect.
@@ -52,14 +48,16 @@ class Server:
 
 		clientArgs = []
 
+		self.recvSocket = socket.socket()
+		self.recvSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		self.recvSocket.bind((self.sourceIp,self.port))
+		self.recvSocket.listen(1)
+
 		while( self.shouldQuit == False):
-			self.recvSocket = socket.socket()
-			self.recvSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-			self.recvSocket.bind((sourceIp,port))
-			self.recvSocket.listen(1)
-			self.remoteConnection, self.remoteAddress = self.recvSocket.accept()
-			print("Client connected.")
-			client = Client(self.remoteConnection, self.remoteAddress)
+			remoteConnection, remoteAddress = self.recvSocket.accept()
+			if(self.shouldQuit == True):
+				return
+			client = Client(remoteConnection, remoteAddress)
 			clientArgs = []
 			self.clients = []
 			self.clients.append(client)
@@ -70,13 +68,17 @@ class Server:
 		self.listenerThread = threading.Thread(target=self.listenerThreadFunc).start()
 
 	def close(self):
-		if(self.remoteConnection != None):
-			self.remoteConnection.close()
+		self.shouldQuit = True;
+		if(self.clients != None):
+			for c in self.clients:
+				c.close()
+				c.remoteConnection.close()
 		#if connection hadn't been made yet, make a bogus one to kill socket.accept()
-		if(self.recvSocket != None and self.remoteConnection == None):
+		if(self.recvSocket != None):
 			tempSock = socket.socket()
-			tempSock.connect(("127.0.0.1", port))
+			tempSock.connect((self.sourceIp, self.port))
 			tempSock.close()
+		self.recvSocket.close()
 
 ###########################################################
 # Main method

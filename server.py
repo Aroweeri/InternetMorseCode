@@ -13,9 +13,10 @@ delay = 3                 #number of seconds to delay the playback of received m
 startTime = datetime.now()
 
 class Client:
-	def __init__(self, remoteConnection, remoteAddress):
+	def __init__(self, remoteConnection, remoteAddress, username):
 		self.remoteConnection = remoteConnection
 		self.remoteAddress = remoteAddress
+		self.username = username
 	def close(self):
 		self.remoteConnection.close()
 
@@ -30,13 +31,20 @@ class Server:
 		self.listenerThread = None
 
 	def clientThread(self, client):
+		remoteMessage = None
 		client.remoteConnection.settimeout(1);
+
+		#get user information
+		while(remoteMessage == None and self.shouldQuit == False):
+			remoteMessage = client.remoteConnection.recv(1024)
+			client.username = remoteMessage.decode()
+
 		while(self.shouldQuit == False):
 			try:
 				remoteMessage =  client.remoteConnection.recv(1024)
 				for c in self.clients:
-					#if(c.remoteAddress == client.remoteAddress):
-					#	continue
+					if(c.username == client.username):
+						continue
 					c.remoteConnection.send(remoteMessage)
 			except Exception:
 				remoteMessage = ""
@@ -52,14 +60,14 @@ class Server:
 		self.recvSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.recvSocket.bind((self.sourceIp,self.port))
 		self.recvSocket.listen(1)
+		self.clients = []
 
 		while( self.shouldQuit == False):
 			remoteConnection, remoteAddress = self.recvSocket.accept()
 			if(self.shouldQuit == True):
 				return
-			client = Client(remoteConnection, remoteAddress)
+			client = Client(remoteConnection, remoteAddress, None)
 			clientArgs = []
-			self.clients = []
 			self.clients.append(client)
 			clientArgs.append(client)
 			t = threading.Thread(target=self.clientThread,args=clientArgs).start()
@@ -87,7 +95,6 @@ def main(args):
 
 	clients = None  #array of clients, represented by address
 	remoteMessage = None
-	morsePacket = None
 	server = None
 
 	if(len(args) != 2):

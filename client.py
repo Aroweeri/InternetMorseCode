@@ -24,6 +24,7 @@ events = None             #event list to replay at the right time
 firstMessageTime = None   #datetime when first message from remote was received
 delay = 3                 #number of seconds to delay the playback of received morse messages
 firstSendTime = None      #local datetime when the first message was sent to the remote
+username = None           #username to send messages with
 
 startTime = datetime.now()
 
@@ -129,7 +130,7 @@ def buttonPressed(suppress):
 		firstSendTime = datetime.now()
 	dt = datetime.now()
 	if(lastMessage == "u"):
-		message = ("d," + str(dt - firstSendTime)).encode()
+		message = ("d," + str(dt - firstSendTime) + "," + str(username)).encode()
 		remoteConnection.send(message)
 		lastMessage = "d"
 		startLocalAudioThread()
@@ -144,7 +145,7 @@ def buttonReleased(suppress):
 
 	dt = datetime.now()
 	if(lastMessage == "d"):
-		message = ("u," + str(dt - firstSendTime)).encode()
+		message = ("u," + str(dt - firstSendTime) + "," + str(username)).encode()
 		remoteConnection.send(message)
 		lastMessage = "u"
 		killLocalAudio()
@@ -200,6 +201,7 @@ def main():
 
 	#Get ip address argument
 	destIp = os.sys.argv[1]
+	username = os.sys.argv[2]
 
 	#connect to remote machine. Retry indefinitely until user terminates program.
 	remoteConnection = socket.socket()
@@ -220,6 +222,7 @@ def main():
 
 	#programs loops forever, waiting for a message from the remote machine to play back the
 	#noise to the local user.
+	remoteConnection.send(username.encode())
 	while(shouldNotQuit == 1):
 		try:
 			remoteMessage = remoteConnection.recv(1024)
@@ -233,9 +236,8 @@ def main():
 	pyAudioManager.close()
 	remoteConnection.close()
 
-if(len(os.sys.argv) != 2):
-	print("Must provide Souce and Destination IP address as argument.")
-	print("usage: python client.py <dest>")
+if(len(os.sys.argv) != 3):
+	print("usage: python client.py <dest> <username>")
 	os.sys.exit(1)
 
 app = gui(handleArgs=False)

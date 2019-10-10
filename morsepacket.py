@@ -4,10 +4,12 @@ class MorsePacket:
 
 	eventType = None
 	eventTime = None
+	user = None
 
 	def __init__(self, unparsedMessage):
 		self.eventType = unparsedMessage.decode().split(',')[0]
 		self.eventTime = unparsedMessage.decode().split(',')[1]
+		self.user = unparsedMessage.decode().split(',')[2]
 		hours = self.eventTime.split(':')[0]
 		minutes = self.eventTime.split(':')[1]
 		seconds = self.eventTime.split(':')[2].split('.')[0]
@@ -22,3 +24,9 @@ class MorsePacket:
 
 	def setEventTime(self, eventTime):
 		self.eventTime = eventTime
+
+	def setUser (self, user):
+		self.user = user
+
+	def getUser(self):
+		return user

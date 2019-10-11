@@ -32,16 +32,27 @@ class Server:
 
 	def clientThread(self, client):
 		remoteMessage = None
+		clientShouldQuit = False
 		client.remoteConnection.settimeout(1);
 
 		#get user information
-		while(remoteMessage == None and self.shouldQuit == False):
+		while(remoteMessage == None and clientShouldQuit == False):
 			remoteMessage = client.remoteConnection.recv(1024)
 			client.username = remoteMessage.decode()
 
-		while(self.shouldQuit == False):
+		while(clientShouldQuit == False):
 			try:
 				remoteMessage =  client.remoteConnection.recv(1024)
+
+				#if client disconnected, endless recv loop
+				if(remoteMessage.decode() == ""):
+					for c in self.clients:
+						if(c.username == client.username):
+							self.clients.remove(c)
+					clientShouldQuit = True
+					continue
+
+				#find clients to echo message to
 				for c in self.clients:
 					if(c.username == client.username):
 						continue

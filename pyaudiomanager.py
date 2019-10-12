@@ -1,5 +1,6 @@
 import pyaudio
 import math
+import numpy as np
 
 class PyAudioManager:
 	localMorseStream = None   #audio stream to write morse code noise to signify local user action
@@ -31,41 +32,31 @@ class PyAudioManager:
 	# *** This section copied from online forums, modified by me.
 	###########################################################
 	def initAudioStuff(self):
-		#initialize pyaudio
-		PyAudio = pyaudio.PyAudio
+		p = pyaudio.PyAudio()
 
-		#See https://en.wikipedia.org/wiki/Bit_rate#Audio
-		BITRATE = 60000   #number of frames per second/frameset.      
-		FREQUENCY = 1000  #Hz, waves per second, 261.63=C4-note.
-		LENGTH = 0.05     #seconds to play sound
+		volume = 1.0     # range [0.0, 1.0]
+		fs = 44100       # sampling rate, Hz, must be integer
+		duration = 0.10  # in seconds, may be float
+		f = 880.0        # sine frequency, Hz, may be float
 
-		NUMBEROFFRAMES = int(BITRATE * LENGTH)
-		RESTFRAMES = NUMBEROFFRAMES % BITRATE
-		self.localSound = ''    
+		# generate samples, note conversion to float32 array
+		samples = (np.sin(2*np.pi*np.arange(fs*duration)*f/fs)).astype(np.float32)
 
-		#generate sine waves
-		for x in range(NUMBEROFFRAMES):
-			self.localSound = self.localSound+chr(int(math.sin(x/((BITRATE/FREQUENCY)/math.pi))*127+128))
+		self.localSound = samples*volume
 
-		FREQUENCY = 2000     #Hz, waves per second, 261.63=C4-note.
+		f = 1600.0
+		samples = (np.sin(2*np.pi*np.arange(fs*duration)*f/fs)).astype(np.float32)
 
-		NUMBEROFFRAMES = int(BITRATE * LENGTH)
-		RESTFRAMES = NUMBEROFFRAMES % BITRATE
-		self.remoteSound = ''    
-		#generating waves
-		for x in range(NUMBEROFFRAMES):
-			self.remoteSound = self.remoteSound+chr(int(math.sin(x/((BITRATE/FREQUENCY)/math.pi))*127+128))
+		self.remoteSound = samples*volume
 
-		self.pyAudio = PyAudio()
+		# for paFloat32 sample values must be in range [-1.0, 1.0]
+		self.localMorseStream = p.open(format=pyaudio.paFloat32,
+				channels=1,
+				rate=fs,
+				output=True)
 
-		#start stream to use for local morse code noise
-		self.localMorseStream = self.pyAudio.open(format = self.pyAudio.get_format_from_width(1),
-			channels = 1,
-			rate = BITRATE,
-			output = True)
-
-		#start stream to use for remote morse code noise
-		self.remoteMorseStream = self.pyAudio.open(format = self.pyAudio.get_format_from_width(1),
-			channels = 1,
-			rate = BITRATE,
-			output = True)
+		# for paFloat32 sample values must be in range [-1.0, 1.0]
+		self.remoteMorseStream = p.open(format=pyaudio.paFloat32,
+				channels=1,
+				rate=fs,
+				output=True)

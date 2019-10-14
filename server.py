@@ -21,9 +21,9 @@ class Client:
 		self.remoteConnection.close()
 
 class Server:
-	def __init__(self):
+	def __init__(self, sourceIp):
 		self.shouldQuit = False
-		self.sourceIp = "127.0.0.1"
+		self.sourceIp = sourceIp
 		self.port = 60001
 		self.recvSocket = None
 		self.firstMessageTime = None
@@ -117,7 +117,7 @@ def main(args):
 	sourceIp = os.sys.argv[1]
 
 	#start server
-	server = Server()
+	server = Server(sourceIp)
 	server.startServerThread()
 
 	print("Press enter to quit.")

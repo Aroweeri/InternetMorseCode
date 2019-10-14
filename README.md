@@ -6,10 +6,9 @@ Once both machines are connected, the user can use the gui's buttons as a morse 
 Local feedback is provided to indicate what the timing of the signal sounds like to the remote machine.
 
 ## Setup / Dependencies
-Python3 Application
-Python modules `pyaudio` and `keyboard` and `appjar` need to be installed. 
-You can use python's package manager, pip, to install these, such as
-`pip install pyaudio` and `pip install keyboard` and `pip install appjar`.
+pip install pyaudio
+pip install keyboard
+pip install appjar
 
 Two python scripts are used to make the connection: server.py and client.py
 
@@ -23,15 +22,15 @@ On the server-side, run `python server.py <local ip address>`. The local ip addr
 address given to your local machine, such as 192.168.1.2.
 The server will wait until a client is connected.
 
-On the client side, run `python client.py <remote public ip address>`, where the argument is the
-public ip address that the server is being hosted from. This can be the machine itself or the
-internet-facing router in front of it.
+On the client side, run `python client.py <remote public ip address> <username>`,
+where the argument is the public ip address that the server is being hosted from.
+This can be the machine itself or the internet-facing router in front of it.
 The client will try and connect to the server.
 
-If a connection is made, you will be able to begin pressing the spacebar to send signals to the
-connected host. At this point, the client and server are the same in terms of functionality.
+If a connection is made, you will be able to send audio pulses to other clients connected to the
+server by clicking the button.
 
-When finished, press the "q" key from either side to quit the connection gracefully.
+When you are finished, click the exit button to close the connection.
 
 ## Known Issues
 

@@ -1,5 +1,4 @@
 import pyaudio
-import math
 import numpy as np
 
 class PyAudioManager:

@@ -7,8 +7,10 @@ Local feedback is provided to indicate what the timing of the signal sounds like
 
 ## Setup / Dependencies
 pip install pyaudio
-pip install keyboard
-pip install appjar
+pip install numpy
+pip install appJar
+
+For pyaudio you may need to install portaudio19-dev if you are on Debian/Ubuntu
 
 Two python scripts are used to make the connection: server.py and client.py
 

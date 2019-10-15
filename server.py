@@ -57,8 +57,12 @@ class Server:
 					if(c.username == client.username):
 						continue
 					c.remoteConnection.send(remoteMessage)
-			except Exception:
-				remoteMessage = ""
+			except Exception as e: 
+				if(e.__class__.__name__ == "timeout"):
+					remoteMessage = ""
+				elif isinstance(e, OSError):
+					print("OSError exception, exiting...")
+					clientShouldQuit = True
 
 	###########################################################
 	# Loop and wait for new clients to connect.

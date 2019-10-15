@@ -37,8 +37,12 @@ class Server:
 
 		#get user information
 		while(remoteMessage == None and clientShouldQuit == False):
-			remoteMessage = client.remoteConnection.recv(1024)
-			client.username = remoteMessage.decode()
+			try:
+				remoteMessage = client.remoteConnection.recv(1024)
+				client.username = remoteMessage.decode()
+			except Exception as e:
+				if(e.__class__.__name__ != "timeout"):
+					print(str(e))
 
 		while(clientShouldQuit == False):
 			try:

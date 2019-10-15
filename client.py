@@ -16,7 +16,7 @@ remoteConnection = None   #connection received from socket.accept()
 destIp = "127.0.0.1"      #if address of destination. set to default value
 lastMessage = "u"         #used to prevent sending many signals when the spacebar is held down
 confirmConnection = 0     #flag set if socket.connect() returns with connection
-shouldNotQuit = 1         #flag set to signal main loop to exit
+shouldNotQuit = True      #flag set to signal main loop to exit
 app = None                #gui of the program
 pyAudioManager = None     #PyAudioManager instance
 events = None             #event list to replay at the right time
@@ -66,7 +66,7 @@ def eventPlaybackThread():
 	global events
 	nextEventTime = None
 
-	while(shouldNotQuit == 1):
+	while(shouldNotQuit == True):
 		dt = datetime.now()
 		if(events != None and len(events) > 0):
 			nextEventTime = events[0].getEventTime()
@@ -95,7 +95,7 @@ def addButtonsToGui():
 def quit(suppress):
 	global shouldNotQuit
 	global app
-	shouldNotQuit = 0
+	shouldNotQuit = False
 	app.stop()
 
 ###########################################################
@@ -222,15 +222,24 @@ def main():
 	#programs loops forever, waiting for a message from the remote machine to play back the
 	#noise to the local user.
 	remoteConnection.send(username.encode())
-	while(shouldNotQuit == 1):
+	while(shouldNotQuit == True):
 		try:
 			remoteMessage = remoteConnection.recv(1024)
+
+			if(remoteMessage.decode() == ""):
+				shouldNotQuit = False
+				continue
+
 			if(firstMessageTime == None):
 				firstMessageTime = datetime.now() - startTime
 			morsePacket = morsepacket.MorsePacket(remoteMessage)
 			addNewEvent(morsePacket)
-		except Exception:
-			remoteMessage = ""
+		except Exception as e:
+			if(e.__class__.__name__ == "timeout"):
+				remoteMessage = ""
+			elif(isinstance(e, OSError)):
+				print("OSError exception, exiting...")
+				shouldNotQuit = False
 
 	pyAudioManager.close()
 	remoteConnection.close()

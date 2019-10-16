@@ -85,7 +85,7 @@ def eventPlaybackThread():
 def addButtonsToGui():
 	global app
 	app.removeLabel("label")
-	clicker = app.addButton("clicker", None)
+	clicker = app.addButton("paddle", None)
 	clicker.bind("<Button-1>", buttonPressed, add="+")
 	clicker.bind("<ButtonRelease-1>", buttonReleased, add="+")
 

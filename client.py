@@ -130,7 +130,11 @@ def buttonPressed(suppress):
 	dt = datetime.now()
 	if(lastMessage == "u"):
 		message = ("d," + str(dt - firstSendTime) + "," + str(username)).encode()
-		remoteConnection.send(message)
+		try:
+			remoteConnection.send(message)
+		except OSError:
+			print("OSError, server likely disconnected.")
+			return
 		lastMessage = "d"
 		startLocalAudioThread()
 

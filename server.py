@@ -12,6 +12,9 @@ delay = 3                 #number of seconds to delay the playback of received m
 
 startTime = datetime.now()
 
+###########################################################
+# Represents a client that is connected to the server
+###########################################################
 class Client:
 	def __init__(self, remoteConnection, remoteAddress, username):
 		self.remoteConnection = remoteConnection
@@ -20,6 +23,9 @@ class Client:
 	def close(self):
 		self.remoteConnection.close()
 
+###########################################################
+# class handles everything about the server
+###########################################################
 class Server:
 	def __init__(self, sourceIp):
 		self.shouldQuit = False
@@ -30,6 +36,9 @@ class Server:
 		self.clients = None
 		self.listenerThread = None
 
+	###########################################################
+	# Thread that handles a client's connection to the server until death
+	###########################################################
 	def clientThread(self, client):
 		remoteMessage = None
 		clientShouldQuit = False
@@ -44,6 +53,7 @@ class Server:
 				if(e.__class__.__name__ != "timeout"):
 					print(str(e))
 
+		#main loop for the client.
 		while(clientShouldQuit == False):
 			try:
 				remoteMessage =  client.remoteConnection.recv(1024)
@@ -91,9 +101,15 @@ class Server:
 			clientArgs.append(client)
 			t = threading.Thread(target=self.clientThread,args=clientArgs).start()
 
+	###########################################################
+	# begin a thread of listenerThreadFunc
+	###########################################################
 	def startServerThread(self):
 		self.listenerThread = threading.Thread(target=self.listenerThreadFunc).start()
 
+	###########################################################
+	# Close the server gracefully
+	###########################################################
 	def close(self):
 		self.shouldQuit = True;
 		if(self.clients != None):

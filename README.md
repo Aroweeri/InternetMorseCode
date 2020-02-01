@@ -6,9 +6,8 @@ Once both machines are connected, the user can use the gui's buttons as a morse 
 Local feedback is provided to indicate what the timing of the signal sounds like to the remote machine.
 
 ## Setup / Dependencies
-`pip install pyaudio`  
-`pip install numpy`  
-`pip install appJar`  
+InternetMorseCode requires `pyaudio`, `numpy`, `appJar`, and `keyboard` modules.  
+You can install these with `pip -r install requirements.txt`
 
 For pyaudio you may need to install package portaudio19-dev if you are on Debian/Ubuntu  
 `sudo apt install portaudio19-dev`

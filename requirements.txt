@@ -1,0 +1,4 @@
+appJar==0.94.0
+keyboard==0.13.4
+numpy==1.18.1
+PyAudio==0.2.11

@@ -1,16 +1,17 @@
 # InternetMorseCode
 
-Allow two computers to send morse code back and forth with minimal network usage.
+Allow two computers to send morse code back and forth with minimal network usage.  
 Once both machines are connected, the user can use the gui's buttons as a morse code input method.
 
 Local feedback is provided to indicate what the timing of the signal sounds like to the remote machine.
 
 ## Setup / Dependencies
-pip install pyaudio
-pip install numpy
-pip install appJar
+`pip install pyaudio`  
+`pip install numpy`  
+`pip install appJar`  
 
-For pyaudio you may need to install portaudio19-dev if you are on Debian/Ubuntu
+For pyaudio you may need to install package portaudio19-dev if you are on Debian/Ubuntu  
+`sudo apt install portaudio19-dev`
 
 Two python scripts are used to make the connection: server.py and client.py
 
@@ -36,4 +37,4 @@ When you are finished, click the exit button to close the connection.
 
 ## Known Issues
 
-Clicking the "clicker" button very fast will sometimes crash the program.
+Clicking the "paddle" button very fast will sometimes crash the program.
